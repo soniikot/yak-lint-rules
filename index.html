@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yak — каждое правило линтера</title>
+<style>
+  :root { color-scheme: light; --bg:#f4f1ea; --paper:#fffdf8; --ink:#1c1915; --muted:#5c564c; --line:#e3dcd0; --on:#1f6b45; --on-bg:#e7f4ec; --rec:#1d4e89; --rec-bg:#e7f0fa; --maybe:#8a5a12; --maybe-bg:#fbf3e4; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 Iowan Old Style, Palatino, Georgia, serif; }
+  main { max-width:1080px; margin:0 auto; padding:32px 20px 80px; }
+  h1 { font-size:32px; line-height:1.15; margin:0 0 8px; }
+  h2 { font-size:22px; margin:0 0 8px; }
+  .lead, .note { font:15px/1.4 ui-sans-serif, system-ui, sans-serif; color:var(--muted); }
+  nav { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
+  nav a, input { font:14px/1.2 ui-sans-serif, system-ui, sans-serif; }
+  nav a { text-decoration:none; color:var(--ink); background:var(--paper); border:1px solid var(--line); border-radius:999px; padding:6px 12px; }
+  input { margin-left:auto; border:1px solid var(--line); border-radius:999px; padding:6px 12px; background:var(--paper); min-width:220px; }
+  section { background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:18px 18px 8px; margin:0 0 16px; }
+  section.on { box-shadow: inset 4px 0 0 var(--on); }
+  section.yes { box-shadow: inset 4px 0 0 var(--rec); }
+  section.no { box-shadow: inset 4px 0 0 var(--maybe); }
+  section.extra { box-shadow: inset 4px 0 0 var(--muted); }
+  .tag { display:inline-block; font:12px/1.2 ui-sans-serif, system-ui, sans-serif; border-radius:999px; padding:3px 8px; margin-bottom:8px; }
+  .on .tag { background:var(--on-bg); color:var(--on); }
+  .yes .tag { background:var(--rec-bg); color:var(--rec); }
+  .no .tag { background:var(--maybe-bg); color:var(--maybe); }
+  .extra .tag { background:var(--line); color:var(--ink); }
+  table { width:100%; border-collapse:collapse; margin:8px 0 12px; }
+  th, td { text-align:left; vertical-align:top; border-top:1px solid var(--line); padding:7px 8px 7px 0; font-size:14px; }
+  th { font:12px/1.2 ui-sans-serif, system-ui, sans-serif; color:var(--muted); }
+  code { font:12.5px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  tr.hide { display:none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Каждое правило</h1>
+  <p class="lead">Три списка. Зелёный уже в конфиге. Синий выключен, правило само по себе можно добавить. Жёлтый выключен, и так лучше оставить. Числа — прогон 6 октября 2026. Вечером того же дня часть строк переложена после сверки с кодом: мало срабатываний само по себе не повод откладывать правило. Поиск фильтрует строки на странице.</p>
+  <nav>
+    <a href="#on">Подключено, 228</a>
+    <a href="#yes">Можно включить, 40</a>
+    <a href="#no">Можно не включать, 89</a>
+    <a href="#extra">Не правила</a>
+    <input id="q" type="search" placeholder="Найти правило" aria-label="Найти правило">
+  </nav>
+
+  <section class="on" id="on">
+    <p class="tag">Подключено</p>
+    <h2>Уже в eslint.config.js и oxlint.config.ts</h2>
+    <p class="note">ESLint error валит <code>npm run lint</code>. Oxlint error тоже валит. Oxlint warn печатает и не валит. У правил <code>typescript/*</code> со значком warn типы не проверяются: в скрипт не передан <code>--type-aware</code>.</p>
+    <table>
+      <thead><tr><th>Правило</th><th>Где</th><th>Уровень</th><th>Зачем оно включено</th></tr></thead>
+      <tbody>
+      <tr><td><code>@typescript-eslint/ban-ts-comment</code></td><td>ESLint</td><td>error</td><td>Голый @ts-ignore прячет ошибку компилятора.</td></tr>
+<tr><td><code>@typescript-eslint/no-array-constructor</code></td><td>ESLint</td><td>error</td><td>new Array(2) даёт дырявый массив.</td></tr>
+<tr><td><code>@typescript-eslint/no-duplicate-enum-values</code></td><td>ESLint</td><td>error</td><td>Два члена enum с одним значением.</td></tr>
+<tr><td><code>@typescript-eslint/no-empty-object-type</code></td><td>ESLint</td><td>error</td><td>Тип {} принимает почти любой объект.</td></tr>
+<tr><td><code>@typescript-eslint/no-explicit-any</code></td><td>ESLint</td><td>error</td><td>Запрещает any.</td></tr>
+<tr><td><code>@typescript-eslint/no-extra-non-null-assertion</code></td><td>ESLint</td><td>error</td><td>Лишний ! на типе, который и так не nullable.</td></tr>
+<tr><td><code>@typescript-eslint/no-floating-promises</code></td><td>ESLint</td><td>error</td><td>Промис надо дождаться или обработать.</td></tr>
+<tr><td><code>@typescript-eslint/no-misused-new</code></td><td>ESLint</td><td>error</td><td>Интерфейс, объявленный как конструктор.</td></tr>
+<tr><td><code>@typescript-eslint/no-namespace</code></td><td>ESLint</td><td>error</td><td>namespace вместо модуля.</td></tr>
+<tr><td><code>@typescript-eslint/no-non-null-asserted-optional-chain</code></td><td>ESLint</td><td>error</td><td>foo?.bar! одновременно говорит «может не быть» и «точно есть».</td></tr>
+<tr><td><code>@typescript-eslint/no-non-null-assertion</code></td><td>ESLint</td><td>error</td><td>Запрещает оператор !.</td></tr>
+<tr><td><code>@typescript-eslint/no-require-imports</code></td><td>ESLint</td><td>error</td><td>require() в ESM-проекте.</td></tr>
+<tr><td><code>@typescript-eslint/no-this-alias</code></td><td>ESLint</td><td>error</td><td>const self = this ломает вывод this.</td></tr>
+<tr><td><code>@typescript-eslint/no-unnecessary-type-constraint</code></td><td>ESLint</td><td>error</td><td>T extends any ничего не ограничивает.</td></tr>
+<tr><td><code>@typescript-eslint/no-unsafe-declaration-merging</code></td><td>ESLint</td><td>error</td><td>Слияние деклараций затирает типы.</td></tr>
+<tr><td><code>@typescript-eslint/no-unsafe-function-type</code></td><td>ESLint</td><td>error</td><td>Тип Function принимает любой вызов.</td></tr>
+<tr><td><code>@typescript-eslint/no-unused-expressions</code></td><td>ESLint</td><td>error</td><td>Выражение, чей результат никто не использует.</td></tr>
+<tr><td><code>@typescript-eslint/no-unused-vars</code></td><td>ESLint</td><td>error</td><td>Мёртвая переменная или импорт.</td></tr>
+<tr><td><code>@typescript-eslint/no-wrapper-object-types</code></td><td>ESLint</td><td>error</td><td>String и Number — объектные обёртки, не примитивы.</td></tr>
+<tr><td><code>@typescript-eslint/prefer-as-const</code></td><td>ESLint</td><td>error</td><td>Лишний as там, где хватает as const.</td></tr>
+<tr><td><code>@typescript-eslint/prefer-namespace-keyword</code></td><td>ESLint</td><td>error</td><td>Ключевое слово module устарело.</td></tr>
+<tr><td><code>@typescript-eslint/switch-exhaustiveness-check</code></td><td>ESLint</td><td>error</td><td>switch по union должен покрыть каждый вариант.</td></tr>
+<tr><td><code>@typescript-eslint/triple-slash-reference</code></td><td>ESLint</td><td>error</td><td>/// &lt;reference&gt; вместо импорта.</td></tr>
+<tr><td><code>for-direction</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-async-promise-executor</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-case-declarations</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-compare-neg-zero</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-cond-assign</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-constant-binary-expression</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-constant-condition</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-control-regex</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-debugger</code></td><td>ESLint</td><td>error</td><td>Оставшийся debugger.</td></tr>
+<tr><td><code>no-delete-var</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-dupe-else-if</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-duplicate-case</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-empty</code></td><td>ESLint</td><td>error</td><td>Пустой блок.</td></tr>
+<tr><td><code>no-empty-character-class</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-empty-pattern</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-empty-static-block</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-ex-assign</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-extra-boolean-cast</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-fallthrough</code></td><td>ESLint</td><td>error</td><td>case проваливается в следующий.</td></tr>
+<tr><td><code>no-global-assign</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-invalid-regexp</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-irregular-whitespace</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-loss-of-precision</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-misleading-character-class</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-nonoctal-decimal-escape</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-octal</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-prototype-builtins</code></td><td>ESLint</td><td>error</td><td>obj.hasOwnProperty падает на объекте без прототипа.</td></tr>
+<tr><td><code>no-regex-spaces</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-restricted-syntax</code></td><td>ESLint</td><td>error</td><td>Запрещает export *, style со значением var(--app-*) и класс [var(--app-*)].</td></tr>
+<tr><td><code>no-self-assign</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-shadow-restricted-names</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-sparse-arrays</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-unexpected-multiline</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-unsafe-finally</code></td><td>ESLint</td><td>error</td><td>return в finally затирает результат.</td></tr>
+<tr><td><code>no-unsafe-optional-chaining</code></td><td>ESLint</td><td>error</td><td>Вызов через ?. того, что может быть undefined.</td></tr>
+<tr><td><code>no-unused-labels</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-unused-private-class-members</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-useless-backreference</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-useless-catch</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-useless-escape</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-var</code></td><td>ESLint</td><td>error</td><td>var вместо const или let.</td></tr>
+<tr><td><code>prefer-const</code></td><td>ESLint</td><td>error</td><td>let, которому больше не присваивают.</td></tr>
+<tr><td><code>prefer-rest-params</code></td><td>ESLint</td><td>error</td><td>arguments вместо rest.</td></tr>
+<tr><td><code>prefer-spread</code></td><td>ESLint</td><td>error</td><td>apply вместо spread.</td></tr>
+<tr><td><code>react-hooks/component-hook-factories</code></td><td>ESLint</td><td>error</td><td>Хук или компонент, объявленный внутри функции.</td></tr>
+<tr><td><code>react-hooks/config</code></td><td>ESLint</td><td>error</td><td>Конфиг React Compiler.</td></tr>
+<tr><td><code>react-hooks/error-boundaries</code></td><td>ESLint</td><td>error</td><td>Ошибку дочернего компонента ловит error boundary.</td></tr>
+<tr><td><code>react-hooks/exhaustive-deps</code></td><td>ESLint</td><td>warn</td><td>Зависимости эффекта должны совпадать с тем, что он читает. Warn, скрипт не валит.</td></tr>
+<tr><td><code>react-hooks/gating</code></td><td>ESLint</td><td>error</td><td>Опции gating React Compiler.</td></tr>
+<tr><td><code>react-hooks/globals</code></td><td>ESLint</td><td>error</td><td>Рендер не пишет в глобалы.</td></tr>
+<tr><td><code>react-hooks/immutability</code></td><td>ESLint</td><td>error</td><td>Пропсы и state не мутируют.</td></tr>
+<tr><td><code>react-hooks/incompatible-library</code></td><td>ESLint</td><td>warn</td><td>Библиотека, с которой мемоизация не сходится. Warn.</td></tr>
+<tr><td><code>react-hooks/preserve-manual-memoization</code></td><td>ESLint</td><td>error</td><td>Ручной useMemo должен совпасть с выводом React Compiler.</td></tr>
+<tr><td><code>react-hooks/purity</code></td><td>ESLint</td><td>error</td><td>Рендер не вызывает заведомо грязные функции.</td></tr>
+<tr><td><code>react-hooks/refs</code></td><td>ESLint</td><td>error</td><td>Читать и писать ref во время рендера нельзя.</td></tr>
+<tr><td><code>react-hooks/rules-of-hooks</code></td><td>ESLint</td><td>error</td><td>Хук только на верхнем уровне компонента.</td></tr>
+<tr><td><code>react-hooks/set-state-in-effect</code></td><td>ESLint</td><td>error</td><td>Синхронный setState в эффекте — лишний проход.</td></tr>
+<tr><td><code>react-hooks/set-state-in-render</code></td><td>ESLint</td><td>error</td><td>setState во время рендера может зациклиться.</td></tr>
+<tr><td><code>react-hooks/static-components</code></td><td>ESLint</td><td>error</td><td>Компонент, созданный внутри рендера, сбрасывает state.</td></tr>
+<tr><td><code>react-hooks/unsupported-syntax</code></td><td>ESLint</td><td>warn</td><td>Синтаксис, который React Compiler не берёт. Warn.</td></tr>
+<tr><td><code>react-hooks/use-memo</code></td><td>ESLint</td><td>error</td><td>useMemo возвращает значение, и это значение используется.</td></tr>
+<tr><td><code>react-refresh/only-export-components</code></td><td>ESLint</td><td>error</td><td>Иначе Vite Fast Refresh перезагружает страницу целиком.</td></tr>
+<tr><td><code>react-you-might-not-need-an-effect/no-adjust-state-on-prop-change</code></td><td>ESLint</td><td>error</td><td>Подгонка state при смене пропа. Обычно хватает key.</td></tr>
+<tr><td><code>react-you-might-not-need-an-effect/no-chain-state-updates</code></td><td>ESLint</td><td>error</td><td>Цепочка setState внутри эффекта.</td></tr>
+<tr><td><code>react-you-might-not-need-an-effect/no-derived-state</code></td><td>ESLint</td><td>error</td><td>Производное значение считается в рендере, не кладётся в state из эффекта.</td></tr>
+<tr><td><code>react-you-might-not-need-an-effect/no-event-handler</code></td><td>ESLint</td><td>error</td><td>Эффект, который на самом деле обработчик события.</td></tr>
+<tr><td><code>react-you-might-not-need-an-effect/no-external-store-subscription</code></td><td>ESLint</td><td>error</td><td>Подписка на внешний store через эффект. Для этого есть useSyncExternalStore.</td></tr>
+<tr><td><code>react-you-might-not-need-an-effect/no-initialize-state</code></td><td>ESLint</td><td>error</td><td>Начальное значение задаётся в useState.</td></tr>
+<tr><td><code>react-you-might-not-need-an-effect/no-pass-data-to-parent</code></td><td>ESLint</td><td>error</td><td>Эффект, который только сообщает данные родителю.</td></tr>
+<tr><td><code>react-you-might-not-need-an-effect/no-pass-live-state-to-parent</code></td><td>ESLint</td><td>error</td><td>Эффект, который на каждый рендер шлёт живой state родителю.</td></tr>
+<tr><td><code>react-you-might-not-need-an-effect/no-reset-all-state-on-prop-change</code></td><td>ESLint</td><td>error</td><td>Сброс всего state при смене пропа. Для этого есть key.</td></tr>
+<tr><td><code>react/no-array-index-key</code></td><td>ESLint</td><td>error</td><td>Индекс массива как key ломает state строки.</td></tr>
+<tr><td><code>require-yield</code></td><td>ESLint</td><td>error</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>use-isnan</code></td><td>ESLint</td><td>error</td><td>Сравнение с NaN через === не работает.</td></tr>
+<tr><td><code>valid-typeof</code></td><td>ESLint</td><td>error</td><td>typeof сравнивают со строкой, которой он не бывает.</td></tr>
+<tr><td><code>anti-slop/no-array-filter-map</code></td><td>Oxlint</td><td>error</td><td>Два прохода filter потом map по одному массиву.</td></tr>
+<tr><td><code>anti-slop/no-reduce-accumulator-copy</code></td><td>Oxlint</td><td>error</td><td>Копия растущего аккумулятора в reduce.</td></tr>
+<tr><td><code>anti-slop/no-chained-type-assertions</code></td><td>Oxlint</td><td>error</td><td>Цепочка as A as B.</td></tr>
+<tr><td><code>anti-slop/no-conditional-empty-object-spread</code></td><td>Oxlint</td><td>error</td><td>Условный spread пустого объекта прячет отсутствие поля.</td></tr>
+<tr><td><code>anti-slop/no-known-value-widening</code></td><td>Oxlint</td><td>error</td><td>Уже известный объект аннотируют как Record или unknown и теряют ключи.</td></tr>
+<tr><td><code>anti-slop/no-module-mocking</code></td><td>Oxlint</td><td>error</td><td>vi.mock и jest.mock подменяют модуль.</td></tr>
+<tr><td><code>anti-slop/no-object-parameters</code></td><td>Oxlint</td><td>error</td><td>Параметр типа object принимает что угодно.</td></tr>
+<tr><td><code>anti-slop/no-reflect-apply</code></td><td>Oxlint</td><td>error</td><td>Reflect.apply обходит обычный вызов.</td></tr>
+<tr><td><code>anti-slop/no-reflect-get</code></td><td>Oxlint</td><td>error</td><td>Reflect.get обходит обычное чтение поля.</td></tr>
+<tr><td><code>anti-slop/no-runtime-typeof</code></td><td>Oxlint</td><td>error</td><td>typeof на внешнем значении не задаёт контракт. Вход разбирается на границе.</td></tr>
+<tr><td><code>anti-slop/no-shape-in-symbol-names</code></td><td>Oxlint</td><td>error</td><td>Подстрока shape в своём имени. Имя должно говорить роль.</td></tr>
+<tr><td><code>anti-slop/no-unknown-parameters</code></td><td>Oxlint</td><td>error</td><td>Параметр unknown значит, что функция сама не разобрала вход.</td></tr>
+<tr><td><code>anti-slop/no-unknown-returns</code></td><td>Oxlint</td><td>error</td><td>Возврат unknown перекладывает разбор на вызывающего.</td></tr>
+<tr><td><code>anti-slop/no-unknown-type-aliases</code></td><td>Oxlint</td><td>error</td><td>Псевдоним, который прячет unknown.</td></tr>
+<tr><td><code>anti-slop/no-unsafe-dictionary-type</code></td><td>Oxlint</td><td>error</td><td>Словарь со значением unknown, any, object или {}.</td></tr>
+<tr><td><code>anti-slop/no-widen-then-assert</code></td><td>Oxlint</td><td>error</td><td>Сначала расширили тип, потом сузили обратно через as.</td></tr>
+<tr><td><code>anti-slop/require-readable-spacing</code></td><td>Oxlint</td><td>error</td><td>Пустая строка перед следующим оператором. Сейчас 11 ошибок, lint из-за них красный.</td></tr>
+<tr><td><code>anti-slop/require-safety-comment-for-type-assertion</code></td><td>Oxlint</td><td>error</td><td>Любой as, кроме as const, требует комментарий SAFETY:.</td></tr>
+<tr><td><code>constructor-super</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>for-direction</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>getter-return</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-async-promise-executor</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-caller</code></td><td>Oxlint</td><td>warn</td><td>arguments.caller.</td></tr>
+<tr><td><code>no-class-assign</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-compare-neg-zero</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-cond-assign</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-const-assign</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-constant-binary-expression</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-constant-condition</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-control-regex</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-debugger</code></td><td>Oxlint</td><td>warn</td><td>Оставшийся debugger.</td></tr>
+<tr><td><code>no-delete-var</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-dupe-class-members</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-dupe-else-if</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-dupe-keys</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-duplicate-case</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-empty-character-class</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-empty-pattern</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-empty-static-block</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-eval</code></td><td>Oxlint</td><td>warn</td><td>eval.</td></tr>
+<tr><td><code>no-ex-assign</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-extra-boolean-cast</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-func-assign</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-global-assign</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-import-assign</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-invalid-regexp</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-irregular-whitespace</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-iterator</code></td><td>Oxlint</td><td>warn</td><td>__iterator__.</td></tr>
+<tr><td><code>no-loss-of-precision</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-misleading-character-class</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-new-native-nonconstructor</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-nonoctal-decimal-escape</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-obj-calls</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-self-assign</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-setter-return</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-shadow-restricted-names</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-sparse-arrays</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-this-before-super</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-unassigned-vars</code></td><td>Oxlint</td><td>warn</td><td>Переменная объявлена и не получила значение.</td></tr>
+<tr><td><code>no-unreachable</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-unsafe-finally</code></td><td>Oxlint</td><td>warn</td><td>return в finally затирает результат.</td></tr>
+<tr><td><code>no-unsafe-negation</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-unsafe-optional-chaining</code></td><td>Oxlint</td><td>warn</td><td>Вызов через ?. того, что может быть undefined.</td></tr>
+<tr><td><code>no-unused-expressions</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-unused-labels</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-unused-private-class-members</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-unused-vars</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>no-useless-backreference</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-useless-catch</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-useless-escape</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>no-useless-rename</code></td><td>Oxlint</td><td>warn</td><td>Пустой rename в импорте или деструктуризации.</td></tr>
+<tr><td><code>no-with</code></td><td>Oxlint</td><td>warn</td><td>Код, который уже неверен: сравнение, ветка, регулярка или встроенный биндинг ведут себя не так, как выглядят.</td></tr>
+<tr><td><code>oxc/bad-array-method-on-arguments</code></td><td>Oxlint</td><td>warn</td><td>Метод массива вызван на arguments.</td></tr>
+<tr><td><code>oxc/bad-char-at-comparison</code></td><td>Oxlint</td><td>warn</td><td>Сравнение результата charAt, которое не отличает символы.</td></tr>
+<tr><td><code>oxc/bad-comparison-sequence</code></td><td>Oxlint</td><td>warn</td><td>Цепочка сравнений вроде a &lt; b &lt; c.</td></tr>
+<tr><td><code>oxc/bad-match-all-arg</code></td><td>Oxlint</td><td>warn</td><td>matchAll без флага g.</td></tr>
+<tr><td><code>oxc/bad-min-max-func</code></td><td>Oxlint</td><td>warn</td><td>Math.min или Math.max вызваны не с тем числом аргументов.</td></tr>
+<tr><td><code>oxc/bad-object-literal-comparison</code></td><td>Oxlint</td><td>warn</td><td>Сравнение с объектным литералом всегда ложно.</td></tr>
+<tr><td><code>oxc/bad-replace-all-arg</code></td><td>Oxlint</td><td>warn</td><td>replaceAll без глобальной регулярки.</td></tr>
+<tr><td><code>oxc/const-comparisons</code></td><td>Oxlint</td><td>warn</td><td>Сравнение, результат которого известен заранее.</td></tr>
+<tr><td><code>oxc/double-comparisons</code></td><td>Oxlint</td><td>warn</td><td>Повтор одного и того же сравнения.</td></tr>
+<tr><td><code>oxc/erasing-op</code></td><td>Oxlint</td><td>warn</td><td>Операция стирает значение, например умножение на 0.</td></tr>
+<tr><td><code>oxc/missing-throw</code></td><td>Oxlint</td><td>warn</td><td>Создали ошибку и не бросили её.</td></tr>
+<tr><td><code>oxc/no-accumulating-spread</code></td><td>Oxlint</td><td>error</td><td>Spread накопителя в reduce или цикле копирует его на каждом шаге.</td></tr>
+<tr><td><code>oxc/number-arg-out-of-range</code></td><td>Oxlint</td><td>warn</td><td>Аргумент числового метода вне диапазона.</td></tr>
+<tr><td><code>oxc/only-used-in-recursion</code></td><td>Oxlint</td><td>warn</td><td>Результат функции используется только в её собственном вызове.</td></tr>
+<tr><td><code>oxc/uninvoked-array-callback</code></td><td>Oxlint</td><td>warn</td><td>Колбэк метода массива не вызывается так, как ждёт метод.</td></tr>
+<tr><td><code>require-yield</code></td><td>Oxlint</td><td>warn</td><td>То же правило уже есть в ESLint как error. Здесь warn: печатает и не валит npm run lint. Дополнительно смотрит .js и .cjs.</td></tr>
+<tr><td><code>typescript/await-thenable</code></td><td>Oxlint</td><td>warn</td><td>await на значении, которое не промис. Без --type-aware типы не смотрит.</td></tr>
+<tr><td><code>typescript/no-array-delete</code></td><td>Oxlint</td><td>warn</td><td>delete по индексу массива. Без --type-aware может молчать.</td></tr>
+<tr><td><code>typescript/no-base-to-string</code></td><td>Oxlint</td><td>warn</td><td>Объект превратили в строку и получили [object Object].</td></tr>
+<tr><td><code>typescript/no-duplicate-enum-values</code></td><td>Oxlint</td><td>warn</td><td>Включено пресетом correctness.</td></tr>
+<tr><td><code>typescript/no-duplicate-type-constituents</code></td><td>Oxlint</td><td>warn</td><td>Один и тот же член union написан дважды.</td></tr>
+<tr><td><code>typescript/no-extra-non-null-assertion</code></td><td>Oxlint</td><td>warn</td><td>Включено пресетом correctness.</td></tr>
+<tr><td><code>typescript/no-floating-promises</code></td><td>Oxlint</td><td>warn</td><td>Дубль ESLint-правила. Без --type-aware не смотрит типы.</td></tr>
+<tr><td><code>typescript/no-for-in-array</code></td><td>Oxlint</td><td>warn</td><td>for-in по массиву. Без --type-aware может молчать.</td></tr>
+<tr><td><code>typescript/no-implied-eval</code></td><td>Oxlint</td><td>warn</td><td>Строка, которую исполняют как код.</td></tr>
+<tr><td><code>typescript/no-meaningless-void-operator</code></td><td>Oxlint</td><td>warn</td><td>void там, где он ничего не меняет.</td></tr>
+<tr><td><code>typescript/no-misused-new</code></td><td>Oxlint</td><td>warn</td><td>Включено пресетом correctness.</td></tr>
+<tr><td><code>typescript/no-misused-spread</code></td><td>Oxlint</td><td>warn</td><td>Spread того, что не является объектом или массивом.</td></tr>
+<tr><td><code>typescript/no-non-null-asserted-optional-chain</code></td><td>Oxlint</td><td>warn</td><td>Включено пресетом correctness.</td></tr>
+<tr><td><code>typescript/no-redundant-type-constituents</code></td><td>Oxlint</td><td>warn</td><td>Член union перекрыт более широким типом.</td></tr>
+<tr><td><code>typescript/no-this-alias</code></td><td>Oxlint</td><td>warn</td><td>Включено пресетом correctness.</td></tr>
+<tr><td><code>typescript/no-unnecessary-parameter-property-assignment</code></td><td>Oxlint</td><td>warn</td><td>Параметр-свойство, которое тут же перезаписывают.</td></tr>
+<tr><td><code>typescript/no-unsafe-declaration-merging</code></td><td>Oxlint</td><td>warn</td><td>Включено пресетом correctness.</td></tr>
+<tr><td><code>typescript/no-unsafe-unary-minus</code></td><td>Oxlint</td><td>warn</td><td>Унарный минус на значении, которое не число.</td></tr>
+<tr><td><code>typescript/no-useless-default-assignment</code></td><td>Oxlint</td><td>warn</td><td>Значение по умолчанию, которое тип и так не даст.</td></tr>
+<tr><td><code>typescript/no-useless-empty-export</code></td><td>Oxlint</td><td>warn</td><td>Пустой export {}.</td></tr>
+<tr><td><code>typescript/no-wrapper-object-types</code></td><td>Oxlint</td><td>warn</td><td>Включено пресетом correctness.</td></tr>
+<tr><td><code>typescript/prefer-as-const</code></td><td>Oxlint</td><td>warn</td><td>Включено пресетом correctness.</td></tr>
+<tr><td><code>typescript/prefer-namespace-keyword</code></td><td>Oxlint</td><td>warn</td><td>Включено пресетом correctness.</td></tr>
+<tr><td><code>typescript/require-array-sort-compare</code></td><td>Oxlint</td><td>warn</td><td>sort без функции сравнения путает числа как строки.</td></tr>
+<tr><td><code>typescript/restrict-template-expressions</code></td><td>Oxlint</td><td>warn</td><td>В шаблонную строку попало значение, которое плохо строкой. Без --type-aware молчит.</td></tr>
+<tr><td><code>typescript/triple-slash-reference</code></td><td>Oxlint</td><td>warn</td><td>Включено пресетом correctness.</td></tr>
+<tr><td><code>typescript/unbound-method</code></td><td>Oxlint</td><td>warn</td><td>Метод оторван от объекта. Без --type-aware молчит.</td></tr>
+<tr><td><code>unicorn/no-await-in-promise-methods</code></td><td>Oxlint</td><td>warn</td><td>await внутри Promise.all и соседних методов.</td></tr>
+<tr><td><code>unicorn/no-empty-file</code></td><td>Oxlint</td><td>warn</td><td>Пустой файл.</td></tr>
+<tr><td><code>unicorn/no-invalid-fetch-options</code></td><td>Oxlint</td><td>warn</td><td>Неверный ключ в опциях fetch.</td></tr>
+<tr><td><code>unicorn/no-invalid-remove-event-listener</code></td><td>Oxlint</td><td>warn</td><td>removeEventListener с другой функцией, чем addEventListener.</td></tr>
+<tr><td><code>unicorn/no-new-array</code></td><td>Oxlint</td><td>warn</td><td>new Array вместо литерала.</td></tr>
+<tr><td><code>unicorn/no-single-promise-in-promise-methods</code></td><td>Oxlint</td><td>warn</td><td>Promise.all из одного промиса.</td></tr>
+<tr><td><code>unicorn/no-thenable</code></td><td>Oxlint</td><td>warn</td><td>Объект с then, который не промис.</td></tr>
+<tr><td><code>unicorn/no-unnecessary-await</code></td><td>Oxlint</td><td>warn</td><td>await там, где значения и так нет.</td></tr>
+<tr><td><code>unicorn/no-useless-fallback-in-spread</code></td><td>Oxlint</td><td>warn</td><td>Запасное значение в spread, которое ничего не добавляет.</td></tr>
+<tr><td><code>unicorn/no-useless-length-check</code></td><td>Oxlint</td><td>warn</td><td>Проверка length перед методом, который и так это умеет.</td></tr>
+<tr><td><code>unicorn/no-useless-spread</code></td><td>Oxlint</td><td>warn</td><td>Spread одного элемента без нужды.</td></tr>
+<tr><td><code>unicorn/prefer-set-size</code></td><td>Oxlint</td><td>warn</td><td>Размер множества вместо обхода.</td></tr>
+<tr><td><code>unicorn/prefer-string-starts-ends-with</code></td><td>Oxlint</td><td>warn</td><td>startsWith вместо slice или regex.</td></tr>
+<tr><td><code>use-isnan</code></td><td>Oxlint</td><td>warn</td><td>Сравнение с NaN через === не работает.</td></tr>
+<tr><td><code>valid-typeof</code></td><td>Oxlint</td><td>warn</td><td>typeof сравнивают со строкой, которой он не бывает.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="yes" id="yes">
+    <p class="tag">Выключено</p>
+    <h2>Можно включить по одному</h2>
+    <p class="note">Категорию целиком не включать. Правила ниже не запрещают <code>async/await</code>, <code>null</code> или простой тернарник. <code>?.</code> снимает только <code>no-unnecessary-condition</code>, и только там, где тип уже гарантирует значение. Ему нужен <code>noUncheckedIndexedAccess</code>.</p>
+    <table>
+      <thead><tr><th>Правило</th><th>Куда</th><th>Сейчас на коде</th><th>Почему можно</th></tr></thead>
+      <tbody>
+      <tr><td><code>@typescript-eslint/no-misused-promises</code></td><td>ESLint</td><td>0 при опции attributes: false</td><td>Ловит промис там, где результат никто не ждёт. Включать с checksVoidReturn: { attributes: false }, иначе 8 ошибок на onClick={() =&gt; zoomIn()} и onSubmit={form.handleSubmit(...)}.</td></tr>
+<tr><td><code>@typescript-eslint/await-thenable</code></td><td>ESLint</td><td>0</td><td>await на значении, которое не промис. Пара к уже включённому no-floating-promises.</td></tr>
+<tr><td><code>@typescript-eslint/no-for-in-array</code></td><td>ESLint</td><td>0</td><td>for-in по массиву обходит ключи, не элементы.</td></tr>
+<tr><td><code>@typescript-eslint/no-implied-eval</code></td><td>ESLint</td><td>0</td><td>setTimeout со строкой исполняет её как код.</td></tr>
+<tr><td><code>@typescript-eslint/no-array-delete</code></td><td>ESLint</td><td>0</td><td>delete arr[i] оставляет дырку. Нужен splice.</td></tr>
+<tr><td><code>@typescript-eslint/only-throw-error</code></td><td>ESLint</td><td>0</td><td>throw должен бросать Error, не строку.</td></tr>
+<tr><td><code>@typescript-eslint/prefer-promise-reject-errors</code></td><td>ESLint</td><td>0</td><td>Promise.reject тоже должен получать Error.</td></tr>
+<tr><td><code>@typescript-eslint/restrict-plus-operands</code></td><td>ESLint</td><td>0</td><td>Плюс между числом и строкой молча склеивает их. Это уровень recommended, не strict.</td></tr>
+<tr><td><code>@typescript-eslint/no-unsafe-enum-comparison</code></td><td>ESLint</td><td>0</td><td>Сравнение enum с числом или с другим enum проходит типы и сравнивает не то.</td></tr>
+<tr><td><code>@typescript-eslint/no-unsafe-argument</code></td><td>ESLint</td><td>6, после типов env 0</td><td>Сначала дописать ключи в ImportMetaEnv. В vite-env.d.ts объявлен только VITE_FEATURE_GPU_REQUESTS, остальные ключи any. Потом это правило и четыре соседних. Они ловят any, который no-explicit-any не видит: из import.meta.env, а на следующей нетипизированной границе из response.json() и JSON.parse.</td></tr>
+<tr><td><code>@typescript-eslint/no-unsafe-assignment</code></td><td>ESLint</td><td>2, после типов env 0</td><td>any из import.meta.env.VITE_BASE_PATH в router.tsx. Включать вместе с остальными no-unsafe-* после типов env.</td></tr>
+<tr><td><code>@typescript-eslint/no-unsafe-call</code></td><td>ESLint</td><td>1, после типов env 0</td><td>Вызов на any из того же env. Включать вместе с остальными no-unsafe-* после типов env.</td></tr>
+<tr><td><code>@typescript-eslint/no-unsafe-member-access</code></td><td>ESLint</td><td>1, после типов env 0</td><td>Чтение поля у any из того же env. Включать вместе с остальными no-unsafe-* после типов env.</td></tr>
+<tr><td><code>@typescript-eslint/no-unsafe-return</code></td><td>ESLint</td><td>0</td><td>Возврат any. Уже тихо. Включать вместе с остальными no-unsafe-* после типов env.</td></tr>
+<tr><td><code>@typescript-eslint/no-unsafe-unary-minus</code></td><td>ESLint</td><td>0</td><td>Унарный минус на значении, которое не число. Уже тихо и к env не привязано.</td></tr>
+<tr><td><code>@typescript-eslint/no-unnecessary-condition</code></td><td>ESLint</td><td>53</td><td>Проверка, которую тип уже делает лишней. Сначала noUncheckedIndexedAccess в tsconfig: без него правило ошибочно ругается на arr[0]?.x. Потом warn. В error, когда 53 места разобраны. Проверка === null на поле T | null не задевается.</td></tr>
+<tr><td><code>@typescript-eslint/restrict-template-expressions</code></td><td>ESLint</td><td>0 на recommended</td><td>Опции recommended, не strict. Ловит ${obj}, который становится [object Object], и ${undefined}. Strict даёт 182, потому что число в шаблонной строке становится ошибкой. Strict не включать.</td></tr>
+<tr><td><code>@typescript-eslint/no-unnecessary-type-conversion</code></td><td>ESLint</td><td>9</td><td>Лишнее приведение, автоисправление. Ловит Number(уже_число).</td></tr>
+<tr><td><code>@typescript-eslint/no-unnecessary-type-arguments</code></td><td>ESLint</td><td>7</td><td>Лишний аргумент типа, который и так выводится. Автоисправление.</td></tr>
+<tr><td><code>@typescript-eslint/no-deprecated</code></td><td>ESLint</td><td>1</td><td>Вызов устаревшего API. Одно место, правило всё равно стоит включить.</td></tr>
+<tr><td><code>@typescript-eslint/prefer-optional-chain</code></td><td>ESLint</td><td>5</td><td>?. вместо цепочки &amp;&amp;. Автоисправление.</td></tr>
+<tr><td><code>@tanstack/query/exhaustive-deps</code></td><td>ESLint, плагина нет</td><td>1</td><td>Параметр запроса отсутствует в queryKey, в кэш попадают чужие данные. Пресет @tanstack/eslint-plugin-query recommended, без strict. prefer-query-options не включать: 32 места, это стиль.</td></tr>
+<tr><td><code>eslint/no-nested-ternary</code></td><td>Oxlint</td><td>9</td><td>Совпадает с правилом Yak: вложенные тернарники запрещены. Простой тернарник на две ветки это правило не трогает.</td></tr>
+<tr><td><code>unicorn/no-nested-ternary</code></td><td>Oxlint</td><td>7</td><td>То же, что eslint/no-nested-ternary. Часть мест он посчитает второй раз.</td></tr>
+<tr><td><code>eslint/eqeqeq</code></td><td>Oxlint</td><td>0 с null: ignore, 15 без неё</td><td>Включать как ["error", "always", { "null": "ignore" }]. Все 15 мест — x == null или x != null, проверка «null или undefined». С этой опцией срабатываний 0. Настоящие != правило по-прежнему ловит.</td></tr>
+<tr><td><code>eslint/no-duplicate-imports</code></td><td>Oxlint</td><td>4</td><td>Два импорта из одного модуля. Включать с allowSeparateTypeImports: import type и обычный импорт из одного модуля в коде разделены, например в router.tsx.</td></tr>
+<tr><td><code>unicorn/no-array-sort</code></td><td>Oxlint</td><td>13</td><td>Текущих багов нет. Массив копируют перед sort или сортируют свежий локальный массив: rows в DemandPlanning/helpers.ts и результат filter в scanning/helpers.ts. State не меняется. На будущее правило годится: toSorted() вместо sort(), target ES2023.</td></tr>
+<tr><td><code>eslint/no-shadow</code></td><td>Oxlint</td><td>5</td><td>Внутреннее имя закрывает внешнее. Легко прочитать не ту переменную.</td></tr>
+<tr><td><code>unicorn/no-instanceof-builtins</code></td><td>Oxlint</td><td>4</td><td>instanceof Array и Object врёт через границу окон и realm.</td></tr>
+<tr><td><code>unicorn/consistent-function-scoping</code></td><td>Oxlint</td><td>1</td><td>Функция используется в одном месте и может жить там, а не снаружи.</td></tr>
+<tr><td><code>oxc/no-map-spread</code></td><td>Oxlint</td><td>10</td><td>Spread внутри map копирует объект на каждом элементе. Рядом с уже включённым no-accumulating-spread.</td></tr>
+<tr><td><code>eslint/no-await-in-loop</code></td><td>Oxlint</td><td>1</td><td>await в цикле идёт по очереди. Иногда так и надо, здесь одно место, его можно посмотреть.</td></tr>
+<tr><td><code>unicorn/prefer-set-has</code></td><td>Oxlint</td><td>1</td><td>Повторный includes по массиву в цикле медленнее Set.</td></tr>
+<tr><td><code>react/no-unescaped-entities</code></td><td>ESLint</td><td>3</td><td>Сырые кавычки в тексте JSX. react/recommended целиком не нужен, это правило одно.</td></tr>
+<tr><td><code>jsx-a11y/prefer-tag-over-role</code></td><td>Oxlint</td><td>18 warn</td><td>role там, где есть нормальный тег. Предупреждение, скрипт не валит.</td></tr>
+<tr><td><code>jsx-a11y/click-events-have-key-events</code></td><td>Oxlint</td><td>5 warn</td><td>Клик на элементе без клавиатурного обработчика.</td></tr>
+<tr><td><code>jsx-a11y/label-has-associated-control</code></td><td>Oxlint</td><td>5 warn</td><td>label не связан с полем.</td></tr>
+<tr><td><code>jsx-a11y/no-noninteractive-element-interactions</code></td><td>Oxlint</td><td>3 warn</td><td>Обработчик на элементе, который не интерактивный.</td></tr>
+<tr><td><code>jsx-a11y/no-static-element-interactions</code></td><td>Oxlint</td><td>2 warn</td><td>Клик на div без роли.</td></tr>
+<tr><td><code>jsx-a11y/control-has-associated-label</code></td><td>Oxlint</td><td>1 warn</td><td>Контрол без подписи.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="no" id="no">
+    <p class="tag">Выключено</p>
+    <h2>Можно не включать</h2>
+    <p class="note">Два разных отбора. Правила, у которых прогон нашёл хотя бы одно место. И правила, которые включали по одному и посчитали даже при нуле: Effect и часть typescript-eslint. Молчащие правила внутри style и restriction сюда не входили: эти категории целиком не включаем, нуль внутри них ничего не меняет.</p>
+    <table>
+      <thead><tr><th>Правило</th><th>Откуда</th><th>Срабатываний</th><th>Почему не надо</th></tr></thead>
+      <tbody>
+      <tr><td><code>eslint/one-var</code></td><td>Oxlint style</td><td>1376</td><td>Требует свой способ объявлять переменные. 1376 правок без смены поведения.</td></tr>
+<tr><td><code>eslint/func-style</code></td><td>Oxlint style</td><td>1205</td><td>Требует только function или только стрелки. В Yak оба вида.</td></tr>
+<tr><td><code>eslint/no-magic-numbers</code></td><td>Oxlint style</td><td>1128</td><td>Запрещает числа в коде, включая обычные 0, 1 и размеры.</td></tr>
+<tr><td><code>eslint/sort-keys</code></td><td>Oxlint style</td><td>806</td><td>Ключи объекта по алфавиту. Порядок полей формы от этого становится хуже.</td></tr>
+<tr><td><code>eslint/sort-imports</code></td><td>Oxlint style</td><td>751</td><td>Импорты по алфавиту. Это форматирование, не баг.</td></tr>
+<tr><td><code>eslint/no-ternary</code></td><td>Oxlint style</td><td>429</td><td>Запрещает любой ? :. В Yak простой тернарник на две ветки разрешён.</td></tr>
+<tr><td><code>unicorn/filename-case</code></td><td>Oxlint style</td><td>294</td><td>Переименовывает файлы под один регистр.</td></tr>
+<tr><td><code>unicorn/no-null</code></td><td>Oxlint style</td><td>283</td><td>Запрещает null. Ответы API и useState у нас бывают null.</td></tr>
+<tr><td><code>eslint/max-statements</code></td><td>Oxlint style</td><td>110</td><td>Режет функцию по числу операторов.</td></tr>
+<tr><td><code>eslint/prefer-destructuring</code></td><td>Oxlint style</td><td>52</td><td>Требует деструктуризацию там, где обычное чтение поля читается лучше.</td></tr>
+<tr><td><code>eslint/arrow-body-style</code></td><td>Oxlint style</td><td>27</td><td>Диктует фигурные скобки у стрелки.</td></tr>
+<tr><td><code>eslint/id-length</code></td><td>Oxlint style</td><td>24</td><td>Режет короткие имена. Однобуквенные и так запрещены ревью, это правило шире.</td></tr>
+<tr><td><code>typescript/array-type</code></td><td>Oxlint style</td><td>22</td><td>Требует T[] либо Array&lt;T&gt;. Сейчас 22 места, это вкус.</td></tr>
+<tr><td><code>eslint/max-params</code></td><td>Oxlint style</td><td>20</td><td>Лимит числа параметров.</td></tr>
+<tr><td><code>eslint/no-continue</code></td><td>Oxlint style</td><td>20</td><td>Запрещает continue.</td></tr>
+<tr><td><code>unicorn/prefer-global-this</code></td><td>Oxlint style</td><td>10</td><td>globalThis вместо window. В браузерном коде window нормален.</td></tr>
+<tr><td><code>unicorn/max-nested-calls</code></td><td>Oxlint style</td><td>10</td><td>Лимит вложенных вызовов.</td></tr>
+<tr><td><code>unicorn/prefer-export-from</code></td><td>Oxlint style</td><td>8</td><td>Свой вкус на реэкспорт. export * у нас и так запрещён отдельно.</td></tr>
+<tr><td><code>eslint/init-declarations</code></td><td>Oxlint style</td><td>6</td><td>Переменная должна получить значение в той же строке.</td></tr>
+<tr><td><code>eslint/prefer-named-capture-group</code></td><td>Oxlint style</td><td>5</td><td>Именованные группы в регулярках.</td></tr>
+<tr><td><code>typescript/consistent-indexed-object-style</code></td><td>Oxlint style</td><td>3</td><td>Record или индексная сигнатура. Три места, это стиль.</td></tr>
+<tr><td><code>eslint/capitalized-comments</code></td><td>Oxlint style</td><td>3</td><td>Комментарий должен начинаться с заглавной.</td></tr>
+<tr><td><code>unicorn/consistent-existence-index-check</code></td><td>Oxlint style</td><td>2</td><td>includes вместо indexOf !== -1.</td></tr>
+<tr><td><code>typescript/consistent-type-imports</code></td><td>Oxlint style</td><td>1</td><td>import type. Одно место, не баг.</td></tr>
+<tr><td><code>unicorn/numeric-separators-style</code></td><td>Oxlint style</td><td>1</td><td>Подчёркивания в длинных числах.</td></tr>
+<tr><td><code>eslint/prefer-template</code></td><td>Oxlint style</td><td>1</td><td>Шаблонная строка вместо конкатенации. Одно место.</td></tr>
+<tr><td><code>eslint/curly</code></td><td>Oxlint style</td><td>1</td><td>Фигурные скобки у каждого if. Одно место.</td></tr>
+<tr><td><code>unicorn/prefer-spread</code></td><td>Oxlint style</td><td>1</td><td>Spread вместо apply. В ESLint prefer-spread уже включён.</td></tr>
+<tr><td><code>unicorn/prefer-ternary</code></td><td>Oxlint style</td><td>1</td><td>Просит тернарник там, где сейчас if. Это обратно no-ternary и раннему return.</td></tr>
+<tr><td><code>eslint/no-useless-computed-key</code></td><td>Oxlint style</td><td>1</td><td>Лишний вычисляемый ключ объекта. Одно место.</td></tr>
+<tr><td><code>typescript/explicit-function-return-type</code></td><td>Oxlint restriction</td><td>532</td><td>Тип возврата у каждой функции, включая маленькие компоненты. Тип и так выводится.</td></tr>
+<tr><td><code>typescript/explicit-module-boundary-types</code></td><td>Oxlint restriction</td><td>322</td><td>Явный тип на каждом экспорте.</td></tr>
+<tr><td><code>oxc/no-optional-chaining</code></td><td>Oxlint restriction</td><td>218</td><td>Запрещает ?.. Необязательные поля API читаются через ?..</td></tr>
+<tr><td><code>eslint/no-use-before-define</code></td><td>Oxlint restriction</td><td>210</td><td>Функция должна быть объявлена выше использования. Хелперы под компонентом станут ошибкой. 210 мест.</td></tr>
+<tr><td><code>eslint/no-undefined</code></td><td>Oxlint restriction</td><td>199</td><td>Запрещает само слово undefined.</td></tr>
+<tr><td><code>oxc/no-rest-spread-properties</code></td><td>Oxlint restriction</td><td>135</td><td>Запрещает spread объекта. Им собираются обновления state и запросы.</td></tr>
+<tr><td><code>oxc/no-async-await</code></td><td>Oxlint restriction</td><td>74</td><td>Запрещает async/await. Запросы к API написаны так.</td></tr>
+<tr><td><code>eslint/no-void</code></td><td>Oxlint restriction</td><td>51</td><td>Запрещает оператор void. Им помечают неиспользуемый аргумент заглушки, void body.</td></tr>
+<tr><td><code>eslint/no-eq-null</code></td><td>Oxlint restriction</td><td>15</td><td>Запрещает == null. Это как раз проверка «null или undefined».</td></tr>
+<tr><td><code>eslint/complexity</code></td><td>Oxlint restriction</td><td>11</td><td>Лимит веток в функции.</td></tr>
+<tr><td><code>unicorn/prefer-module</code></td><td>Oxlint restriction</td><td>11</td><td>Только ESM. api/*.cjs на require, общее дерево так не включить.</td></tr>
+<tr><td><code>typescript/explicit-member-accessibility</code></td><td>Oxlint restriction</td><td>9</td><td>public и private на каждом поле класса.</td></tr>
+<tr><td><code>eslint/no-implicit-globals</code></td><td>Oxlint restriction</td><td>8</td><td>Запрещает неявные глобалы. В браузере это пересекается с тем, что Oxlint не знает window.</td></tr>
+<tr><td><code>typescript/no-require-imports</code></td><td>Oxlint restriction</td><td>6</td><td>Дубль уже включённого ESLint-правила. На api/*.cjs require законен.</td></tr>
+<tr><td><code>typescript/no-var-requires</code></td><td>Oxlint restriction</td><td>6</td><td>То же про require в CJS.</td></tr>
+<tr><td><code>unicorn/no-array-reduce</code></td><td>Oxlint restriction</td><td>5</td><td>Запрещает reduce. Он в коде есть и это нормальный инструмент.</td></tr>
+<tr><td><code>typescript/no-import-type-side-effects</code></td><td>Oxlint restriction</td><td>2</td><td>Стиль import type.</td></tr>
+<tr><td><code>unicorn/no-array-for-each</code></td><td>Oxlint restriction</td><td>2</td><td>Запрещает forEach.</td></tr>
+<tr><td><code>typescript/no-invalid-void-type</code></td><td>Oxlint restriction</td><td>2</td><td>Два места с void в типе. Мало, и правило легко задевает нормальный void.</td></tr>
+<tr><td><code>unicorn/prefer-node-protocol</code></td><td>Oxlint restriction</td><td>1</td><td>node:fs вместо fs. Это браузерное приложение, одно место.</td></tr>
+<tr><td><code>eslint/max-lines-per-function</code></td><td>Oxlint pedantic</td><td>167</td><td>Потолок 50 строк. ClustersPage на 97 строках уже ошибка. В Yak компонент около 200 строк нормален. 167 из 311 ошибок категории.</td></tr>
+<tr><td><code>eslint/require-unicode-regexp</code></td><td>Oxlint pedantic</td><td>36</td><td>Флаг u у каждой регулярки. 36 мест, это не пойманный баг.</td></tr>
+<tr><td><code>unicorn/no-array-callback-reference</code></td><td>Oxlint pedantic</td><td>33</td><td>Нельзя передать функцию в map напрямую, только через стрелку. 33 места.</td></tr>
+<tr><td><code>eslint/max-lines</code></td><td>Oxlint pedantic</td><td>18</td><td>Лимит строк файла. provisionSchema.ts на 376 строках.</td></tr>
+<tr><td><code>eslint/require-await</code></td><td>Oxlint pedantic</td><td>11</td><td>async без await. Заглушки вроде privateLinksService.list держат async рядом с методами, которые промис возвращают.</td></tr>
+<tr><td><code>unicorn/prefer-number-coercion</code></td><td>Oxlint pedantic</td><td>5</td><td>Number(x) вместо +x.</td></tr>
+<tr><td><code>unicorn/explicit-length-check</code></td><td>Oxlint pedantic</td><td>4</td><td>length === 0 вместо !length.</td></tr>
+<tr><td><code>eslint/no-negated-condition</code></td><td>Oxlint pedantic</td><td>3</td><td>Запрещает отрицательное условие. Те же 3 места считает ещё и unicorn.</td></tr>
+<tr><td><code>unicorn/no-negated-condition</code></td><td>Oxlint pedantic</td><td>3</td><td>Дубль предыдущего правила.</td></tr>
+<tr><td><code>unicorn/prefer-at</code></td><td>Oxlint pedantic</td><td>3</td><td>.at() вместо индекса.</td></tr>
+<tr><td><code>unicorn/prefer-math-min-max</code></td><td>Oxlint pedantic</td><td>2</td><td>Math.min вместо короткого сравнения.</td></tr>
+<tr><td><code>unicorn/prefer-string-replace-all</code></td><td>Oxlint pedantic</td><td>2</td><td>replaceAll вместо replace с флагом g.</td></tr>
+<tr><td><code>unicorn/no-immediate-mutation</code></td><td>Oxlint pedantic</td><td>2</td><td>Нельзя дописать поле сразу после создания объекта.</td></tr>
+<tr><td><code>unicorn/prefer-query-selector</code></td><td>Oxlint pedantic</td><td>1</td><td>querySelector вместо getElementById. Одно место в main.tsx.</td></tr>
+<tr><td><code>unicorn/escape-case</code></td><td>Oxlint pedantic</td><td>1</td><td>Регистр букв в escape-последовательности.</td></tr>
+<tr><td><code>unicorn/prefer-type-error</code></td><td>Oxlint pedantic</td><td>1</td><td>После проверки типа бросать TypeError. Одно место.</td></tr>
+<tr><td><code>unicorn/no-useless-undefined</code></td><td>Oxlint pedantic</td><td>1</td><td>Лишний undefined. Одно место.</td></tr>
+<tr><td><code>unicorn/prefer-code-point</code></td><td>Oxlint pedantic</td><td>1</td><td>codePointAt вместо charCodeAt. Одно место.</td></tr>
+<tr><td><code>unicorn/prefer-single-call</code></td><td>Oxlint pedantic</td><td>1</td><td>Один push вместо нескольких. Одно место.</td></tr>
+<tr><td><code>unicorn/no-lonely-if</code></td><td>Oxlint pedantic</td><td>1</td><td>Два if слить в один. Одно место.</td></tr>
+<tr><td><code>@typescript-eslint/no-redundant-type-constituents</code></td><td>ESLint, пресет не включён</td><td>1</td><td>CellZoneStatus | string. Если открытый string нужен для неизвестного статуса API, правило ошибается.</td></tr>
+<tr><td><code>@typescript-eslint/require-await</code></td><td>ESLint, пресет не включён</td><td>1</td><td>privateLinksService.list: async без await рядом с другими заглушками.</td></tr>
+<tr><td><code>@typescript-eslint/unbound-method</code></td><td>ESLint, пресет не включён</td><td>0</td><td>Часто ругается на колбэк, которому this не нужен.</td></tr>
+<tr><td><code>@typescript-eslint/no-confusing-void-expression</code></td><td>ESLint, пресет не включён</td><td>136</td><td>Ругается на () =&gt; setState(), потому что setState возвращает void. Это обычные обработчики.</td></tr>
+<tr><td><code>@typescript-eslint/no-invalid-void-type</code></td><td>ESLint, пресет не включён</td><td>2</td><td>void в позиции типа. Два места, пресет strict из-за них не нужен.</td></tr>
+<tr><td><code>@typescript-eslint/use-unknown-in-catch-callback-variable</code></td><td>ESLint, пресет не включён</td><td>1</td><td>Тип ошибки в колбэке catch. Одно место.</td></tr>
+<tr><td><code>@typescript-eslint/array-type</code></td><td>ESLint, пресет не включён</td><td>22</td><td>T[] или Array&lt;T&gt;. Стиль.</td></tr>
+<tr><td><code>@typescript-eslint/consistent-indexed-object-style</code></td><td>ESLint, пресет не включён</td><td>3</td><td>Record или индексная сигнатура. Стиль.</td></tr>
+<tr><td><code>@typescript-eslint/prefer-nullish-coalescing</code></td><td>ESLint, пресет не включён</td><td>48</td><td>?? вместо ||. Меняет поведение на пустой строке и 0, это не механическая замена.</td></tr>
+<tr><td><code>@typescript-eslint/prefer-includes</code></td><td>ESLint, пресет не включён</td><td>2</td><td>includes вместо indexOf. Два места.</td></tr>
+<tr><td><code>react/react-in-jsx-scope</code></td><td>ESLint, пресет не включён</td><td>3630</td><td>Требует import React. Проект на автоматическом JSX React 19, импорт не нужен.</td></tr>
+<tr><td><code>eslint/no-undef</code></td><td>Oxlint nursery</td><td>80</td><td>Ругается на fetch, document, window, localStorage, URLSearchParams, TextDecoder. У Oxlint нет браузерных глобалов. Это не баги.</td></tr>
+<tr><td><code>eslint/no-useless-assignment</code></td><td>Oxlint nursery</td><td>1</td><td>Одно присваивание в services/models/helpers.ts. Ради nursery, который тащит no-undef, не стоит.</td></tr>
+<tr><td><code>anti-slop-effect/no-manual-effect-error-tag</code></td><td>Oxlint</td><td>0</td><td>effect не зависимость. Прогон пяти Effect-правил дал 0.</td></tr>
+<tr><td><code>anti-slop-effect/no-manual-tag-comparison</code></td><td>Oxlint</td><td>0</td><td>Нечему срабатывать: Effect в проекте нет.</td></tr>
+<tr><td><code>anti-slop-effect/no-manual-tagged-construction</code></td><td>Oxlint</td><td>0</td><td>Нечему срабатывать: Effect в проекте нет.</td></tr>
+<tr><td><code>anti-slop-effect/no-service-constructor-imports</code></td><td>Oxlint</td><td>0</td><td>Нечему срабатывать: Effect в проекте нет.</td></tr>
+<tr><td><code>anti-slop-effect/prefer-effect-match</code></td><td>Oxlint</td><td>0</td><td>Нечему срабатывать: Effect в проекте нет.</td></tr>
+<tr><td><code>react/jsx-no-leaked-render</code></td><td>ESLint</td><td>не включали</td><td>Не видит boolean и ругается на каждый {flag &amp;&amp; &lt;X /&gt;}. Так Yak и рендерит условия.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="extra" id="extra">
+    <p class="tag">Не правило</p>
+    <h2>Рядом с линтом, в конфиг ESLint не класть</h2>
+    <p class="note">Проверено на том же дереве 6 октября 2026. В синий список это не входит: здесь нет правила, которое можно просто включить.</p>
+    <table>
+      <thead><tr><th>Что</th><th>Сейчас</th><th>Что с этим делать</th></tr></thead>
+      <tbody>
+      <tr><td>Цикл импортов</td><td>1 цикл</td><td>router.tsx импортирует Layout, Layout импортирует NavigationMenu, меню тянет navSections обратно из router.tsx. import-x/no-cycle этот цикл пропустил. В CI запускать madge --circular или dependency-cruiser.</td></tr>
+      <tr><td>Knip</td><td>155 неиспользуемых экспортов, 4 зависимости</td><td>Скрипт npm run knip есть, в npm run lint его нет. В lint не добавлять, пока список не разобран: lint станет красным, и агент начнёт удалять экспорты или ставить disable.</td></tr>
+      <tr><td>Глушение ошибок</td><td>1 eslint-disable в src/, в form.tsx</td><td>Включить reportUnusedDisableDirectives: "error". Плагин @eslint-community/eslint-comments с no-unlimited-disable — отдельная зависимость. Имеет смысл, если агенты глушат файл целиком.</td></tr>
+      <tr><td>Дубли ESLint и Oxlint</td><td>десятки одних и тех же правил</td><td>eslint-plugin-oxlint выключает в ESLint то, что уже смотрит Oxlint. Копии в Oxlint сейчас warn и npm run lint не валят. Плагин ставить после того, как пересекающиеся правила Oxlint будут error. Иначе проверка ослабнет.</td></tr>
+      <tr><td>Копипаста и покрытие типами</td><td>jscpd 0,4%, type-coverage 99,97%</td><td>В CI не добавлять.</td></tr>
+      <tr><td>Два правила на одно</td><td>плагины ещё не стоят рядом</td><td>Если оба появятся, оставить одно: react/no-array-index-key или @eslint-react/no-array-index-key; sonarjs/deprecation или @typescript-eslint/no-deprecated; sonarjs/prefer-regexp-exec или @typescript-eslint/prefer-regexp-exec; один запрет вложенного тернарника из eslint, unicorn, sonarjs; set-state-in-effect либо в react-hooks, либо в @eslint-react; sonarjs/cognitive-complexity, а complexity не дублировать.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+<script>
+  const q = document.querySelector("#q");
+  q.addEventListener("input", () => {
+    const needle = q.value.trim().toLowerCase();
+    for (const row of document.querySelectorAll("tbody tr")) {
+      row.classList.toggle("hide", needle !== "" && !row.textContent.toLowerCase().includes(needle));
+    }
+  });
+</script>
+</body>
+</html>
